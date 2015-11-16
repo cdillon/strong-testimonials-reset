@@ -3,7 +3,7 @@
 Plugin Name: Strong Testimonials Reset
 Description: Leave No Trace
 Author: Chris Dillon
-Version: 1.0
+Version: 1.1
 Text Domain: strong-testimonials-reset
 Requires: 3.0 or higher
 License: GPLv3 or later
@@ -35,9 +35,9 @@ class Strong_Testimonials_Reset {
 		add_action( 'admin_enqueue_scripts', array( $this, 'load_scripts' ) );
 		add_action( 'admin_menu', array( $this, 'add_options_page' ), 20 );
 		add_action( 'load-tools_page_reset-strong-testimonials', array( $this, 'reset_page' ) );
-		
+
 		$this->set_actions();
-		
+
 		foreach ( $this->actions as $action => $ops ) {
 			add_action( "strong_reset_$action", array( $this, $ops['method'] ) );
 		}
@@ -83,7 +83,7 @@ class Strong_Testimonials_Reset {
 		);
 
 	}
-	
+
 	public function load_scripts() {
 		//wp_enqueue_style( 'reset-admin-style', 'css/admin.css', array(), null );
 	}
@@ -97,9 +97,9 @@ class Strong_Testimonials_Reset {
 				'confirm' => false,
 				'success' => true
 			);
-			
+
 			do_action( 'strong_reset_' . $_REQUEST['reset'] );
-			
+
 			$goback = add_query_arg( $args, wp_get_referer() );
 			wp_redirect( $goback );
 			exit;
@@ -137,17 +137,15 @@ class Strong_Testimonials_Reset {
 	}
 
 	public function trigger_update() {
-		$options = get_option( 'wpmtst_options' );
-		$options = array_merge( $options, array( 'plugin_version' => '1' ) );
-		update_option( 'wpmtst_options', $options );
-		delete_option( 'wpmtst_plugin_version' );
+		update_option( 'wpmtst_plugin_version', '1.21' );
+		update_option( 'wpmtst_db_version', '0' );
 	}
 
 	public function delete_options() {
 		global $wpdb;
 		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wpmtst_%'" );
 	}
-	
+
 	public function reset_pointers() {
 		$dismissed = explode( ',', (string) get_user_meta( get_current_user_id(), 'dismissed_wp_pointers', true ) );
 		$keep = array();
@@ -178,7 +176,7 @@ class Strong_Testimonials_Reset {
 		deactivate_plugins( 'strong-testimonials/strong-testimonials.php' );
 		activate_plugin( 'strong-testimonials/strong-testimonials.php' );
 	}
-	
+
 }
 
 new Strong_Testimonials_Reset();
