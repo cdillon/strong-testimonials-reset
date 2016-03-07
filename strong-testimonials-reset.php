@@ -137,7 +137,7 @@ class Strong_Testimonials_Reset {
 	}
 
 	public function trigger_update() {
-		update_option( 'wpmtst_plugin_version', '1.21' );
+		update_option( 'wpmtst_plugin_version', '1.25.2' );
 		update_option( 'wpmtst_db_version', '0' );
 	}
 
