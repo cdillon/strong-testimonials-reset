@@ -1,15 +1,14 @@
 <?php
 /**
-Plugin Name: Strong Testimonials Reset
+Plugin Name: Strong Testimonials - Reset
 Description: Leave No Trace
 Author: Chris Dillon
-Version: 1.1
+Version: 1.3
 Text Domain: strong-testimonials-reset
 Requires: 3.0 or higher
 License: GPLv3 or later
 
-
-Copyright 2015  Chris Dillon  chris@wpmission.com
+Copyright 2015-2017  Chris Dillon  chris@wpmission.com
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -52,20 +51,30 @@ class Strong_Testimonials_Reset {
 			),
 			'options'     => array(
 				'method'  => 'delete_options',
-				'label'   => 'Delete settings',
+				'label'   => 'Delete all settings',
 				'success' => __( 'Settings deleted successfully.', 'strong-testimonials-reset' ),
 			),
-			'tables'      => array(
+			'addons'      => array(
+				'method'  => 'unset_addons',
+				'label'   => 'Delete add-on info',
+				'success' => __( 'Add-on info deleted successfully.', 'strong-testimonials-reset' ),
+			),
+			'drop-tables'      => array(
 				'method'  => 'drop_tables',
 				'label'   => 'Drop tables',
 				'success' => __( 'Tables dropped successfully.', 'strong-testimonials-reset' ),
+			),
+			'add-tables'      => array(
+				'method'  => 'Add_tables',
+				'label'   => 'Add tables',
+				'success' => __( 'Tables added successfully.', 'strong-testimonials-reset' ),
 			),
 			'pointers'    => array(
 				'method'  => 'reset_pointers',
 				'label'   => 'Reset pointers',
 				'success' => __( 'Pointers reset successfully.', 'strong-testimonials-reset' ),
 			),
-			'reset-order' => array(
+			'order' => array(
 				'method'  => 'reset_order',
 				'label'   => 'Reset order',
 				'success' => __( 'Order reset successfully.', 'strong-testimonials-reset' ),
@@ -137,13 +146,18 @@ class Strong_Testimonials_Reset {
 	}
 
 	public function trigger_update() {
-		update_option( 'wpmtst_plugin_version', '1.25.2' );
+		update_option( 'wpmtst_plugin_version', '1.99' );
 		update_option( 'wpmtst_db_version', '0' );
 	}
 
 	public function delete_options() {
 		global $wpdb;
 		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wpmtst_%'" );
+	}
+
+	public function unset_addons() {
+		global $wpdb;
+		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wpmtst_addons'" );
 	}
 
 	public function reset_pointers() {
@@ -161,6 +175,31 @@ class Strong_Testimonials_Reset {
 		global $wpdb;
 		$table = $wpdb->prefix . 'strong_views';
 		$wpdb->query( "DROP TABLE IF EXISTS {$table}" );
+	}
+
+	public function add_tables() {
+		global $wpdb;
+
+		$charset_collate = $wpdb->get_charset_collate();
+
+		$table_name = $wpdb->prefix . 'strong_views';
+
+		$sql = "CREATE TABLE $table_name (
+			id mediumint(9) NOT NULL AUTO_INCREMENT,
+			name varchar(100) NOT NULL,
+			value text NOT NULL,
+			PRIMARY KEY  (id)
+		) $charset_collate;";
+
+		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		$result = dbDelta( $sql );
+
+		if ( $result && function_exists( 'q2' ) ) {
+			q2( $result, __FUNCTION__ );
+		}
+
+		update_option( 'wpmtst_db_version', '1.0' );
+
 	}
 
 	public function reset_order() {
