@@ -1,38 +1,48 @@
 <?php
 /**
-Plugin Name: Strong Testimonials - Reset
-Description: Leave No Trace
-Author: Chris Dillon
-Version: 1.3
-Text Domain: strong-testimonials-reset
-Requires: 3.0 or higher
-License: GPLv3 or later
+ * Plugin Name: Strong Testimonials - Reset
+ * Description: Leave No Trace
+ * Author: Chris Dillon
+ * Version: 1.4
+ * Text Domain: strong-testimonials-reset
+ * Requires: 3.0 or higher
+ * License: GPLv3 or later
+ *
+ * Copyright 2015-2017  Chris Dillon  chris@wpmission.com
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
-Copyright 2015-2017  Chris Dillon  chris@wpmission.com
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+// Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) )
+	exit;
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
 
 class Strong_Testimonials_Reset {
 
 	public $actions;
 
 	public function __construct() {
-		load_plugin_textdomain( 'strong-testimonials-reset', false, dirname( plugin_basename( __FILE__ ) ) . '/lang' );
+
+		add_action( 'plugins_loaded', array( $this, 'load_textdomain' ) );
+
 		add_action( 'admin_enqueue_scripts', array( $this, 'load_scripts' ) );
+
 		add_action( 'admin_menu', array( $this, 'add_options_page' ), 20 );
+
 		add_action( 'load-tools_page_reset-strong-testimonials', array( $this, 'reset_page' ) );
 
 		$this->set_actions();
@@ -40,6 +50,10 @@ class Strong_Testimonials_Reset {
 		foreach ( $this->actions as $action => $ops ) {
 			add_action( "strong_reset_$action", array( $this, $ops['method'] ) );
 		}
+	}
+
+	public function load_textdomain() {
+		load_plugin_textdomain( 'strong-testimonials-reset', false, dirname( plugin_basename( __FILE__ ) ) . '/lang' );
 	}
 
 	public function set_actions() {
@@ -78,6 +92,11 @@ class Strong_Testimonials_Reset {
 				'method'  => 'reset_order',
 				'label'   => 'Reset order',
 				'success' => __( 'Order reset successfully.', 'strong-testimonials-reset' ),
+			),
+			'custom_order' => array(
+				'method'  => 'reset_custom_order',
+				'label'   => 'Reset custom order',
+				'success' => __( 'Custom order reset successfully.', 'strong-testimonials-reset' ),
 			),
 			'transients'  => array(
 				'method'  => 'delete_transients',
@@ -205,6 +224,13 @@ class Strong_Testimonials_Reset {
 	public function reset_order() {
 		global $wpdb;
 		$wpdb->query( "UPDATE {$wpdb->posts} SET menu_order = 0 WHERE post_type = 'wpm-testimonial'" );
+	}
+
+	public function reset_custom_order() {
+		global $wpdb;
+		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wpmtst_custom_order%'" );
+		$wpdb->query( "DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE 'testimonial_score%'" );
+		//$wpdb->query( "DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE 'testimonial_complete%'" );
 	}
 
 	public function delete_transients() {
