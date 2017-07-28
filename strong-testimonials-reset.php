@@ -3,7 +3,7 @@
  * Plugin Name: Strong Testimonials - Reset
  * Description: Leave No Trace
  * Author: Chris Dillon
- * Version: 1.4
+ * Version: 1.4.1
  * Text Domain: strong-testimonials-reset
  * Requires: 3.0 or higher
  * License: GPLv3 or later
@@ -62,6 +62,11 @@ class Strong_Testimonials_Reset {
 				'method'  => 'trigger_update',
 				'label'   => 'Trigger update process',
 				'success' => __( 'Update triggered successfully.', 'strong-testimonials-reset' ),
+			),
+			'repair'      => array(
+				'method'  => 'repair_fields',
+				'label'   => 'Repair custom fields',
+				'success' => __( 'Repair triggered successfully.', 'strong-testimonials-reset' ),
 			),
 			'options'     => array(
 				'method'  => 'delete_options',
@@ -167,6 +172,43 @@ class Strong_Testimonials_Reset {
 	public function trigger_update() {
 		update_option( 'wpmtst_plugin_version', '1.99' );
 		update_option( 'wpmtst_db_version', '0' );
+	}
+
+	public function repair_fields() {
+
+		$fields       = get_option( 'wpmtst_fields' );
+		$custom_forms = get_option( 'wpmtst_custom_forms' );
+
+        foreach ( $custom_forms as $form_id => $form_properties ) {
+
+            foreach ( $form_properties['fields'] as $key => $form_field ) {
+
+                /*
+                 * Merge in new default.
+                 * Custom fields are in display order (not associative) so we must find them by `input_type`.
+                 * @since 2.21.0 Using default fields instead of default form as source
+                 */
+                //$new_default = array();
+
+                foreach ( $fields['field_types'] as $field_type_group_key => $field_type_group ) {
+                    foreach ( $field_type_group as $field_type_key => $field_type_field ) {
+                        if ( $field_type_field['input_type'] == $form_field['input_type'] ) {
+                            //$new_default = $field_type_field;
+                            $form_field['show_mailchimp_option'] = $field_type_field['show_mailchimp_option'];
+                            break;
+                        }
+                    }
+                }
+
+                //if ( $new_default ) {
+                    $custom_forms[ $form_id ]['fields'][ $key ] = $form_field;
+                //}
+
+            }
+
+        }
+        update_option( 'wpmtst_custom_forms', $custom_forms );
+
 	}
 
 	public function delete_options() {
