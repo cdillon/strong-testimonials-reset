@@ -1,11 +1,11 @@
 <?php
 /**
- * Plugin Name: Strong Testimonials - Reset
+ * Plugin Name: Strong Testimonials Reset
  * Description: Leave No Trace
  * Author: Chris Dillon
- * Version: 1.4.1
+ * Version: 1.5
  * Text Domain: strong-testimonials-reset
- * Requires: 3.0 or higher
+ * Requires: 3.7 or higher
  * License: GPLv3 or later
  *
  * Copyright 2015-2017  Chris Dillon  chris@wpmission.com
@@ -172,43 +172,48 @@ class Strong_Testimonials_Reset {
 	public function trigger_update() {
 		update_option( 'wpmtst_plugin_version', '1.99' );
 		update_option( 'wpmtst_db_version', '0' );
+		$history = get_option( 'wpmtst_history' );
+		if ( isset( $history['2.28_new_update_process'] ) ) {
+		    unset( $history['2.28_new_update_process'] );
+		    update_option( 'wpmtst_history', $history );
+		}
 	}
 
 	public function repair_fields() {
+		if ( method_exists( 'Strong_Testimonials_Defaults', 'get_fields' ) ) {
+			$fields = Strong_Testimonials_Defaults::get_fields();
+		} elseif ( function_exists( 'wpmtst_get_default_fields' ) ) {
+			$fields = wpmtst_get_default_fields();
+		} else {
+			$fields = get_option( 'wpmtst_fields' );
+		}
 
-		$fields       = get_option( 'wpmtst_fields' );
 		$custom_forms = get_option( 'wpmtst_custom_forms' );
 
         foreach ( $custom_forms as $form_id => $form_properties ) {
 
             foreach ( $form_properties['fields'] as $key => $form_field ) {
-
                 /*
                  * Merge in new default.
                  * Custom fields are in display order (not associative) so we must find them by `input_type`.
                  * @since 2.21.0 Using default fields instead of default form as source
                  */
-                //$new_default = array();
-
                 foreach ( $fields['field_types'] as $field_type_group_key => $field_type_group ) {
                     foreach ( $field_type_group as $field_type_key => $field_type_field ) {
                         if ( $field_type_field['input_type'] == $form_field['input_type'] ) {
-                            //$new_default = $field_type_field;
-                            $form_field['show_mailchimp_option'] = $field_type_field['show_mailchimp_option'];
+                            if ( isset( $field_type_field['show_mailchimp_option'] ) ) {
+	                            $form_field['show_mailchimp_option'] = $field_type_field['show_mailchimp_option'];
+                            }
                             break;
                         }
                     }
                 }
-
-                //if ( $new_default ) {
-                    $custom_forms[ $form_id ]['fields'][ $key ] = $form_field;
-                //}
-
+                $custom_forms[ $form_id ]['fields'][ $key ] = $form_field;
             }
 
         }
+        update_option( 'wpmtst_fields', $fields );
         update_option( 'wpmtst_custom_forms', $custom_forms );
-
 	}
 
 	public function delete_options() {
@@ -256,7 +261,7 @@ class Strong_Testimonials_Reset {
 		$result = dbDelta( $sql );
 
 		if ( $result && function_exists( 'q2' ) ) {
-			q2( $result, __FUNCTION__ );
+			//q2( $result, __FUNCTION__ );
 		}
 
 		update_option( 'wpmtst_db_version', '1.0' );
