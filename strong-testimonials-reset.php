@@ -8,7 +8,7 @@
  * Requires: 3.7 or higher
  * License: GPLv3 or later
  *
- * Copyright 2015-2017  Chris Dillon  chris@wpmission.com
+ * Copyright 2015-2017  Chris Dillon  chris@strongplugins.com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +27,7 @@
 
 
 // Exit if accessed directly
-if ( ! defined( 'ABSPATH' ) )
-	exit;
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 
 class Strong_Testimonials_Reset {
