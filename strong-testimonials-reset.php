@@ -3,7 +3,7 @@
  * Plugin Name: Strong Testimonials Reset
  * Description: Leave No Trace
  * Author: Chris Dillon
- * Version: 1.5
+ * Version: 1.5.1
  * Text Domain: strong-testimonials-reset
  * Requires: 3.7 or higher
  * License: GPLv3 or later
@@ -36,8 +36,6 @@ class Strong_Testimonials_Reset {
 
 	public function __construct() {
 
-		add_action( 'plugins_loaded', array( $this, 'load_textdomain' ) );
-
 		add_action( 'admin_enqueue_scripts', array( $this, 'load_scripts' ) );
 
 		add_action( 'admin_menu', array( $this, 'add_options_page' ), 20 );
@@ -49,10 +47,6 @@ class Strong_Testimonials_Reset {
 		foreach ( $this->actions as $action => $ops ) {
 			add_action( "strong_reset_$action", array( $this, $ops['method'] ) );
 		}
-	}
-
-	public function load_textdomain() {
-		load_plugin_textdomain( 'strong-testimonials-reset', false, dirname( plugin_basename( __FILE__ ) ) . '/lang' );
 	}
 
 	public function set_actions() {
@@ -169,13 +163,14 @@ class Strong_Testimonials_Reset {
 	}
 
 	public function trigger_update() {
-		update_option( 'wpmtst_plugin_version', '1.99' );
-		update_option( 'wpmtst_db_version', '0' );
-		$history = get_option( 'wpmtst_history' );
-		if ( isset( $history['2.28_new_update_process'] ) ) {
-		    unset( $history['2.28_new_update_process'] );
-		    update_option( 'wpmtst_history', $history );
-		}
+		update_option( 'wpmtst_plugin_version', '2.0' );
+		update_option( 'wpmtst_db_version', '1' );
+        delete_option( 'wpmtst_history' );
+		//$history = get_option( 'wpmtst_history' );
+		//if ( isset( $history['2.28_new_update_process'] ) ) {
+		//    unset( $history['2.28_new_update_process'] );
+		//    update_option( 'wpmtst_history', $history );
+		//}
 	}
 
 	public function repair_fields() {
@@ -281,6 +276,7 @@ class Strong_Testimonials_Reset {
 
 	public function delete_transients() {
 		delete_transient( 'wpmtst_order_query' );
+		delete_transient( 'wpmtst_update_in_progress' );
 	}
 
 	public function reactivate_plugin() {
