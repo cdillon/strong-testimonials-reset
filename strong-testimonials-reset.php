@@ -3,12 +3,12 @@
  * Plugin Name: Strong Testimonials Reset
  * Description: Leave No Trace
  * Author: Chris Dillon
- * Version: 1.5.1
+ * Version: 1.6
  * Text Domain: strong-testimonials-reset
  * Requires: 3.7 or higher
  * License: GPLv3 or later
  *
- * Copyright 2015-2017  Chris Dillon  chris@strongplugins.com
+ * Copyright 2015-2018  Chris Dillon  chris@strongplugins.com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -155,22 +155,32 @@ class Strong_Testimonials_Reset {
 				$args = array( 'page' => $_REQUEST['page'], 'reset' => $action, 'confirm' => 'yes' );
 				echo '<p><a href="' . add_query_arg( $args, admin_url( 'tools.php' ) ) . '">' . $ops['label'] . '</a></p>';
 			}
-
-		?>
-
+		    ?>
 		</div>
-	<?php
+	    <?php
 	}
 
 	public function trigger_update() {
 		update_option( 'wpmtst_plugin_version', '2.0' );
 		update_option( 'wpmtst_db_version', '1' );
-        delete_option( 'wpmtst_history' );
-		//$history = get_option( 'wpmtst_history' );
-		//if ( isset( $history['2.28_new_update_process'] ) ) {
-		//    unset( $history['2.28_new_update_process'] );
-		//    update_option( 'wpmtst_history', $history );
-		//}
+        //delete_option( 'wpmtst_history' );
+		$history = get_option( 'wpmtst_history' );
+        unset( $history['2.28_new_update_process'] );
+        unset( $history['2.29_captcha_options_changed'] );
+        unset( $history['2.30_new_template_structure'] );
+        update_option( 'wpmtst_history', $history );
+
+		// add-ons
+		$addons = get_option( 'wpmtst_addons' );
+		if ( isset( $addons['multiple-forms']['version'] ) ) {
+			unset( $addons['multiple-forms']['version'] );
+		}
+		if ( isset( $addons['properties']['version'] ) ) {
+			unset( $addons['properties']['version'] );
+		}
+		if ( isset( $addons['review-markup']['version'] ) ) {
+			unset( $addons['review-markup']['version'] );
+		}
 	}
 
 	public function repair_fields() {
@@ -259,7 +269,6 @@ class Strong_Testimonials_Reset {
 		}
 
 		update_option( 'wpmtst_db_version', '1.0' );
-
 	}
 
 	public function reset_order() {
