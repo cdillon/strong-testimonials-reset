@@ -3,7 +3,7 @@
  * Plugin Name: Strong Testimonials Reset
  * Description: Leave No Trace
  * Author: Chris Dillon
- * Version: 1.6
+ * Version: 1.7
  * Text Domain: strong-testimonials-reset
  * Requires: 3.7 or higher
  * License: GPLv3 or later
@@ -69,6 +69,11 @@ class Strong_Testimonials_Reset {
 			'addons'      => array(
 				'method'  => 'unset_addons',
 				'label'   => 'Delete add-on info',
+				'success' => __( 'Add-on info deleted successfully.', 'strong-testimonials-reset' ),
+			),
+			'addon_assignment' => array(
+				'method'  => 'unset_addon_assignment',
+				'label'   => 'Delete info for Assignment add-on',
 				'success' => __( 'Add-on info deleted successfully.', 'strong-testimonials-reset' ),
 			),
 			'drop-tables'      => array(
@@ -228,6 +233,12 @@ class Strong_Testimonials_Reset {
 	public function unset_addons() {
 		global $wpdb;
 		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wpmtst_addons'" );
+	}
+
+	public function unset_addon_assignment() {
+		global $wpdb;
+		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wpmtst_assignment%'" );
+		$wpdb->query( "DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE 'strong_assignment%'" );
 	}
 
 	public function reset_pointers() {
