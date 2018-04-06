@@ -3,7 +3,7 @@
  * Plugin Name: Strong Testimonials Reset
  * Description: Leave No Trace
  * Author: Chris Dillon
- * Version: 1.7
+ * Version: 1.8
  * Text Domain: strong-testimonials-reset
  * Requires: 3.7 or higher
  * License: GPLv3 or later
@@ -71,9 +71,14 @@ class Strong_Testimonials_Reset {
 				'label'   => 'Delete add-on info',
 				'success' => __( 'Add-on info deleted successfully.', 'strong-testimonials-reset' ),
 			),
+			'addon_review_markup' => array(
+				'method'  => 'unset_addon_review_markup',
+				'label'   => 'Delete info for <b>Review Markup</b> add-on',
+				'success' => __( 'Add-on info deleted successfully.', 'strong-testimonials-reset' ),
+			),
 			'addon_assignment' => array(
 				'method'  => 'unset_addon_assignment',
-				'label'   => 'Delete info for Assignment add-on',
+				'label'   => 'Delete info for <b>Assignment</b> add-on',
 				'success' => __( 'Add-on info deleted successfully.', 'strong-testimonials-reset' ),
 			),
 			'drop-tables'      => array(
@@ -233,6 +238,14 @@ class Strong_Testimonials_Reset {
 	public function unset_addons() {
 		global $wpdb;
 		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wpmtst_addons'" );
+	}
+
+	public function unset_addon_review_markup() {
+		global $wpdb;
+		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wpmtst_review_markup%'" );
+		// TODO Only remove review markup errors and notices instead of deleting records.
+		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wpmtst_config_errors'" );
+		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wpmtst_admin_notices'" );
 	}
 
 	public function unset_addon_assignment() {
