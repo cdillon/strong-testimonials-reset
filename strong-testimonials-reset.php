@@ -3,7 +3,7 @@
  * Plugin Name: Strong Testimonials Reset
  * Description: Leave No Trace
  * Author: Chris Dillon
- * Version: 1.8
+ * Version: 1.8.1
  * Text Domain: strong-testimonials-reset
  * Requires: 3.7 or higher
  * License: GPLv3 or later
@@ -250,8 +250,15 @@ class Strong_Testimonials_Reset {
 
 	public function unset_addon_assignment() {
 		global $wpdb;
+
+		$addons = get_option( 'wpmtst_addons' );
+		unset( $addons['assignment'] );
+		update_option( 'wpmtst_addons', $addons );
+
 		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wpmtst_assignment%'" );
 		$wpdb->query( "DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE 'strong_assignment%'" );
+
+		update_option( 'strong_testimonials_assignment_init', 1 );
 	}
 
 	public function reset_pointers() {
