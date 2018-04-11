@@ -3,12 +3,12 @@
  * Plugin Name: Strong Testimonials Reset
  * Description: Leave No Trace
  * Author: Chris Dillon
- * Version: 1.5
+ * Version: 1.8
  * Text Domain: strong-testimonials-reset
  * Requires: 3.7 or higher
  * License: GPLv3 or later
  *
- * Copyright 2015-2017  Chris Dillon  chris@strongplugins.com
+ * Copyright 2015-2018  Chris Dillon  chris@strongplugins.com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,8 +36,6 @@ class Strong_Testimonials_Reset {
 
 	public function __construct() {
 
-		add_action( 'plugins_loaded', array( $this, 'load_textdomain' ) );
-
 		add_action( 'admin_enqueue_scripts', array( $this, 'load_scripts' ) );
 
 		add_action( 'admin_menu', array( $this, 'add_options_page' ), 20 );
@@ -49,10 +47,6 @@ class Strong_Testimonials_Reset {
 		foreach ( $this->actions as $action => $ops ) {
 			add_action( "strong_reset_$action", array( $this, $ops['method'] ) );
 		}
-	}
-
-	public function load_textdomain() {
-		load_plugin_textdomain( 'strong-testimonials-reset', false, dirname( plugin_basename( __FILE__ ) ) . '/lang' );
 	}
 
 	public function set_actions() {
@@ -75,6 +69,16 @@ class Strong_Testimonials_Reset {
 			'addons'      => array(
 				'method'  => 'unset_addons',
 				'label'   => 'Delete add-on info',
+				'success' => __( 'Add-on info deleted successfully.', 'strong-testimonials-reset' ),
+			),
+			'addon_review_markup' => array(
+				'method'  => 'unset_addon_review_markup',
+				'label'   => 'Delete info for <b>Review Markup</b> add-on',
+				'success' => __( 'Add-on info deleted successfully.', 'strong-testimonials-reset' ),
+			),
+			'addon_assignment' => array(
+				'method'  => 'unset_addon_assignment',
+				'label'   => 'Delete info for <b>Assignment</b> add-on',
 				'success' => __( 'Add-on info deleted successfully.', 'strong-testimonials-reset' ),
 			),
 			'drop-tables'      => array(
@@ -161,20 +165,31 @@ class Strong_Testimonials_Reset {
 				$args = array( 'page' => $_REQUEST['page'], 'reset' => $action, 'confirm' => 'yes' );
 				echo '<p><a href="' . add_query_arg( $args, admin_url( 'tools.php' ) ) . '">' . $ops['label'] . '</a></p>';
 			}
-
-		?>
-
+		    ?>
 		</div>
-	<?php
+	    <?php
 	}
 
 	public function trigger_update() {
-		update_option( 'wpmtst_plugin_version', '1.99' );
-		update_option( 'wpmtst_db_version', '0' );
+		update_option( 'wpmtst_plugin_version', '2.0' );
+		update_option( 'wpmtst_db_version', '1' );
+        //delete_option( 'wpmtst_history' );
 		$history = get_option( 'wpmtst_history' );
-		if ( isset( $history['2.28_new_update_process'] ) ) {
-		    unset( $history['2.28_new_update_process'] );
-		    update_option( 'wpmtst_history', $history );
+        unset( $history['2.28_new_update_process'] );
+        unset( $history['2.29_captcha_options_changed'] );
+        unset( $history['2.30_new_template_structure'] );
+        update_option( 'wpmtst_history', $history );
+
+		// add-ons
+		$addons = get_option( 'wpmtst_addons' );
+		if ( isset( $addons['multiple-forms']['version'] ) ) {
+			unset( $addons['multiple-forms']['version'] );
+		}
+		if ( isset( $addons['properties']['version'] ) ) {
+			unset( $addons['properties']['version'] );
+		}
+		if ( isset( $addons['review-markup']['version'] ) ) {
+			unset( $addons['review-markup']['version'] );
 		}
 	}
 
@@ -225,6 +240,27 @@ class Strong_Testimonials_Reset {
 		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wpmtst_addons'" );
 	}
 
+	public function unset_addon_review_markup() {
+		global $wpdb;
+		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wpmtst_review_markup%'" );
+		// TODO Only remove review markup errors and notices instead of deleting records.
+		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wpmtst_config_errors'" );
+		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wpmtst_admin_notices'" );
+	}
+
+	public function unset_addon_assignment() {
+		global $wpdb;
+
+		$addons = get_option( 'wpmtst_addons' );
+		unset( $addons['assignment'] );
+		update_option( 'wpmtst_addons', $addons );
+
+		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wpmtst_assignment%'" );
+		$wpdb->query( "DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE 'strong_assignment%'" );
+
+		update_option( 'strong_testimonials_assignment_init', 1 );
+	}
+
 	public function reset_pointers() {
 		$dismissed = explode( ',', (string) get_user_meta( get_current_user_id(), 'dismissed_wp_pointers', true ) );
 		$keep = array();
@@ -264,7 +300,6 @@ class Strong_Testimonials_Reset {
 		}
 
 		update_option( 'wpmtst_db_version', '1.0' );
-
 	}
 
 	public function reset_order() {
@@ -281,6 +316,7 @@ class Strong_Testimonials_Reset {
 
 	public function delete_transients() {
 		delete_transient( 'wpmtst_order_query' );
+		delete_transient( 'wpmtst_update_in_progress' );
 	}
 
 	public function reactivate_plugin() {
